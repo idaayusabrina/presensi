@@ -22,7 +22,7 @@ export default function Siswa() {
   };
 
   const handleSelect = (nisn) => {
-    const selectedIndex = selected.indexOf(nisn);
+    const selectedIndex = selected.indexOf(nisn);//nisn
     let newSelected = [];
 
     if (selectedIndex === -1) {
