@@ -54,8 +54,8 @@ function Sidebar(props) {
             </Link>
           ))}
 
-          {/* Profil Section */}
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+          
+          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>// ini profil
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar src={profile.avatar} alt={profile.name} sx={{ width: 56, height: 56 }} />
               <Box>
