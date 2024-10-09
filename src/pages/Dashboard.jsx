@@ -235,9 +235,9 @@ export default function Dashboard() {
               {/* logo dashboard */}
             </Toolbar>
             <Divider />
-            <List component="nav">
+            <List component="nav" sx={{ zIndex: 1000 }}>
               {mainListItems}
-              <Divider sx={{ my: 1 }} />
+              {/* <Divider sx={{ my: 1 }} /> */}
             </List>
           </Box>
         </Drawer>

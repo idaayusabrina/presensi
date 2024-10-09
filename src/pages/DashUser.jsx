@@ -36,8 +36,17 @@ import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import avatarImage from '../../public/assets/woo seok7.jpg';
 
 
+  // Sample user profile data
+  export const userProfile = {
+    avatar: avatarImage,
+    name: 'Admin',
+    email: 'admin@example.com',
+  };
+  console.log("userProfile: ", userProfile)
+  
 
 // Sample data for the table
 const tableData = [
@@ -152,6 +161,11 @@ export default function DashUser() {
     handleClose();
   };
 
+
+
+
+
+
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: 'flex' }}>
@@ -214,7 +228,7 @@ export default function DashUser() {
             <Divider />
             <List component="nav">
               {ListItemsUser}
-              <Divider sx={{ my: 1 }} />
+              {/* <Divider sx={{ my: 1 }} /> */}
             </List>
           </Box>
         </Drawer>

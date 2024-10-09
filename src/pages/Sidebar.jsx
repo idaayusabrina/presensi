@@ -9,33 +9,39 @@ import Box from '@mui/material/Box';
 import { IconButton } from '@mui/material';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { Link } from 'react-router-dom';
+import { userProfile } from './DashUser';
 
 function Sidebar(props) {
-  const { archives, description, social, title, profile, userProfile } = props; // Added userProfile
+  const { archives, description, social, title, profile } = props; // Added userProfile
 
   return (
-    <Box >
+    <Box sx={{ p: 2 }}>
       {/* New Title */}
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
         Presensi Siswa
       </Typography>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <Box elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
+        <Grid item xs={12}>
+          {/* Info Section */}
+          <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
             <Typography variant="h6" gutterBottom>
               {title}
             </Typography>
             <Typography>{description}</Typography>
-          </Box>
+          </Paper>
+          
+          {/* Archives Section */}
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Archives
           </Typography>
           {archives.map((archive) => (
-            <Link display="block" variant="body1" href={archive.url} key={archive.title}>
+            <Link display="block" variant="body1" to={archive.url} key={archive.title}>
               {archive.title}
             </Link>
           ))}
+
+          {/* Social Section */}
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
             Social
           </Typography>
@@ -43,7 +49,7 @@ function Sidebar(props) {
             <Link
               display="block"
               variant="body1"
-              href="#"
+              to="#"
               key={network.name}
               sx={{ mb: 0.5 }}
             >
@@ -54,20 +60,20 @@ function Sidebar(props) {
             </Link>
           ))}
 
-          
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>// ini profilAaaaaaaaaa
+          {/* Profile Section */}
+          {/* <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
             <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar src={profile.avatar} alt={profile.name} sx={{ width: 56, height: 56 }} />
+              <Avatar src={userProfile.avatar} alt={userProfile.name} sx={{ width: 56, height: 56 }} />
               <Box>
-                <Typography variant="h6">{profile.name}</Typography>
+                <Typography variant="h6">{userProfile.name}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  {profile.description}
+                  {userProfile.email}
                 </Typography>
               </Box>
             </Stack>
-          </Box>
+          </Box> */}
 
-          {/* User Profile Section */}
+          {/* User Profile Section
           <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar src={userProfile.avatar} alt={userProfile.name} sx={{ width: 56, height: 56 }} />
@@ -81,7 +87,21 @@ function Sidebar(props) {
                 <LogoutRoundedIcon />
               </IconButton>
             </Stack>
-          </Box>
+          </Box> */}
+
+            <Box sx={{ zIndex:999 }}>
+              <Stack>
+                <Avatar src="C:\Presensi_Siswa\presensi\public\assets\woo seok7.jpg" alt="profile" />
+                <Box>
+                  <Typography>Nama profil</Typography>
+                  <Typography>Email</Typography>
+                </Box>
+              </Stack>
+            </Box>
+            <IconButton size="md" variant="plain" color="danger">
+                <LogoutRoundedIcon />
+              </IconButton>
+
         </Grid>
       </Grid>
     </Box>

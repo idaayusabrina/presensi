@@ -6,6 +6,10 @@ import { Link } from 'react-router-dom';
 import { Typography } from '@mui/material';
 import ClassIcon from '@mui/icons-material/Class';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { Box, Stack, Avatar } from '@mui/material';
+import AvatarImage from '../../public/assets/woo seok7.jpg'
+import IconButton from '@mui/material/IconButton';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 
 const mainListItems = (
   <React.Fragment>
@@ -36,6 +40,23 @@ const mainListItems = (
        <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Siswa</Typography>
     </ListItemButton>
     </Link>
+
+    <Box sx={{ display: 'flex', flexDirection: 'column', mt: '52vh', backgroundColor: '#2596be'}}>  {/* INI ADALAH BAGIAN YANG MEMBUAT PROFIL BERADA DI BAWAH */}
+      <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', marginBottom: '0', display: 'flex', alignItems: 'center '}}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar src={AvatarImage} alt="profil" sx={{ width: 56, height: 56 }} />
+          <Box>
+            <Typography variant="h6">Nama</Typography>
+            <Typography variant="body2" color="textSecondary">
+              EMAIL
+            </Typography>
+          </Box>
+        </Stack>
+        <IconButton sx={{ ml: 5, backgroundColor: 'pink' }}>
+          <LogoutRoundedIcon sx={{ color: 'red', borderRadius: 9 }}/>
+        </IconButton>
+      </Box>
+      </Box>
 
   </React.Fragment>
 );
