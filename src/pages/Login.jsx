@@ -4,8 +4,14 @@ import Logo from '/assets/logoweb.png';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { fetchData } from '../api/apiService';
 
 const Login = () => {
+  const [nis, setNis] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [token, setToken] = React.useState('');
+  const [name, setName] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false);
   const navigate = useNavigate(); // Hook untuk navigasi
 
@@ -13,11 +19,54 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLogin = (event) => {
-    event.preventDefault(); // Mencegah refresh halaman
-    // Tambahkan logika autentikasi jika diperlukan
-    // Misalnya, jika autentikasi berhasil, arahkan ke dashboard
-    navigate('/dashboard'); // Arahkan ke halaman dashboard
+  const handleUsernameChange = (e) => {
+    setNis(e.target.value);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
+  const handleLogin = async (e) => {
+    console.log('aa')
+    e.preventDefault(); // Mencegah refresh halaman
+    setError(''); // Reset error message
+
+    try {
+      const response = await fetchData('login', {
+        nis: nis,
+        password: password,
+      }, 'post');
+      console.log(response)
+      const { access, id, name, guru, id_user, detail } = response;
+
+      localStorage.setItem('token', access);
+      localStorage.setItem('id', id);
+      localStorage.setItem('nis', nis);
+      localStorage.setItem('name', name);
+      localStorage.setItem('id_user', id_user);
+      localStorage.setItem('detail', JSON.stringify(detail));
+      
+      localStorage.setItem('guru', guru);
+
+      // setToken(token); 
+      // setName(name); 
+
+      alert('Login successful!');
+      if (guru) {
+        navigate('/dashboard');
+      }
+      else {
+        navigate('/dashuser');
+      }
+    } catch (error) {
+      if (error.response) {
+        setError(error.response.data.error);
+      } else {
+        console.log(error)
+        setError('Login failed. Please try again.');
+      }
+    }
   };
 
   return (
@@ -54,14 +103,17 @@ const Login = () => {
           </Typography>
           <form onSubmit={handleLogin}>
             <TextField
-              label="Username"
+              label="NIS"
               variant="outlined"
               fullWidth
               margin="normal"
               size="small"
               autoFocus
+              value={nis}
+              onChange={handleUsernameChange}
               sx={{ fontFamily: 'Poppins' }}
             />
+
             <TextField
               label="Password"
               variant="outlined"
@@ -69,6 +121,8 @@ const Login = () => {
               margin="normal"
               size="small"
               type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={handlePasswordChange}
               sx={{ fontFamily: 'Poppins' }}
               InputProps={{
                 endAdornment: (
@@ -78,6 +132,7 @@ const Login = () => {
                 ),
               }}
             />
+            {error && <p style={{ color: 'red' }}>{error}</p>}
             <Button
               variant="contained"
               color="primary"
@@ -88,11 +143,11 @@ const Login = () => {
             >
               Login
             </Button>
-            <Box display='flex' justifyContent='end'>
+            {/* <Box display='flex' justifyContent='end'>
               <Link to="https://www.canva.com/" fontSize='20' textAlign='right' fontFamily='Poppins'>
                 lupa password?
               </Link>
-            </Box>
+            </Box> */}
           </form>
         </Box>
       </Container>

@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Button, 
-  Typography, 
-  Grid, 
-  Checkbox, 
-  FormControlLabel, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  TextField, 
-  RadioGroup, 
+import {
+  Box,
+  Card,
+  CardContent,
+  Button,
+  Typography,
+  Grid,
+  Checkbox,
+  FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  RadioGroup,
   Radio,
   FormControl,
   FormLabel,
-  FormHelperText
+  FormHelperText,
+  Paper
 } from '@mui/material';
 import { styled, createTheme, ThemeProvider } from '@mui/material/styles';
 import MuiAppBar from '@mui/material/AppBar';
@@ -28,7 +29,13 @@ import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
-import mainListItems from './listItems'; // Kamu perlu mengganti dengan file `listItems` kamu
+import mainListItems from './listItems'; // Pastikan kamu mengganti dengan file `listItems` kamu
+import { fetchData } from '../api/apiService';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+
 
 const drawerWidth = 240;
 
@@ -77,84 +84,141 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 export default function PermintaanIzin() {
-  const siswa = [
-    {
-      nama: 'ryu sunjae',
-      kelas: 'XII RPL 1',
-      nomorAbsen: 12,
-    },
-    {
-      nama: 'sunjae',
-      kelas: 'XI RPL 2',
-      nomorAbsen: 5,
-    },
-    {
-      nama: 'byeon woo seok',
-      kelas: 'X RPL 3',
-      nomorAbsen: 23,
-    },
-    {
-      nama: 'byeon woo seok',
-      kelas: 'X RPL 3',
-      nomorAbsen: 23,
-    },
-  ];
-
+  const [siswa, setSiswa] = React.useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentSiswa, setCurrentSiswa] = useState(null);
-  const [izinType, setIzinType] = useState('izin');
-  const [tanggalAwal, setTanggalAwal] = useState('');
-  const [tanggalAkhir, setTanggalAkhir] = useState('');
-  const [deskripsi, setDeskripsi] = useState('');
+  const [currentSiswa, setCurrentSiswa] = useState({
+    id: '',
+    nis: '',
+    nama: '',
+    kelas: '',
+    jurusan: '',
+    tanggal: '',
+    keterangan: '',
+    status: '',
+    approved: '',
+  });
   const [selectedSiswa, setSelectedSiswa] = useState([]);
-  
+  const [runclick, setRunclick] = React.useState(false)
+  const [loading, setLoading] = React.useState(true);
+  const [selectedDate, setSelectedDate] = React.useState(dayjs());
+
+  const getData = async () => {
+    try {
+      // Fetch data for "Sakit"
+      const resultSakit = await fetchData('kehadiran', {
+        status: 'Sakit',
+        tanggal: selectedDate.format('YYYY-MM-DD')
+      });
+      const dataSakit = resultSakit.map(item => ({
+        id: item.id,
+        nis: item.siswa.nis,
+        nama: item.siswa.nama,
+        kelas: item.siswa.kelas.nama,
+        jurusan: item.siswa.kelas.jurusan,
+        tanggal: item.tanggal,
+        keterangan: item.keterangan,
+        status: item.status,
+        approved: item.approved,
+      }));
+
+      // Fetch data for "Izin"
+      const resultIzin = await fetchData('kehadiran', {
+        status: 'Izin',
+        tanggal: selectedDate.format('YYYY-MM-DD')
+      });
+      const dataIzin = resultIzin.map(item => ({
+        id: item.id,
+        nis: item.siswa.nis,
+        nama: item.siswa.nama,
+        kelas: item.siswa.kelas.nama,
+        jurusan: item.siswa.kelas.jurusan,
+        tanggal: item.tanggal,
+        keterangan: item.keterangan,
+        status: item.status,
+        approved: item.approved,
+      }));
+
+      // Combine both data sets
+      const combinedData = [...dataSakit, ...dataIzin];
+
+      // Set the combined data to the siswa state
+      setSiswa(combinedData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDialogOpen = (siswa) => {
     setCurrentSiswa(siswa);
+    console.log(siswa)
     setOpenDialog(true);
   };
-  
+
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setCurrentSiswa({});
   };
-  
-  const handleApprove = () => {
+
+  const handleApprove = async () => {
     alert(`Izin disetujui untuk ${currentSiswa.nama}`);
+    const response = await fetchData('kehadiran/' + currentSiswa.id, {
+      "approved": true,
+    }, 'patch');
     handleDialogClose();
+    setRunclick(e => !e)
   };
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedSiswa(siswa.map((_, index) => index));
+      // Include all siswa data in selectedSiswa
+      setSelectedSiswa(siswa.filter((s) => s.approved === false)); // Set selectedSiswa to all siswa
     } else {
-      setSelectedSiswa([]);
+      setSelectedSiswa([]); // Clear selectedSiswa
     }
   };
 
-  const handleSelect = (index) => {
-    if (selectedSiswa.includes(index)) {
-      setSelectedSiswa(selectedSiswa.filter((i) => i !== index));
+  const handleSelect = (siswaItem) => {
+    if (selectedSiswa.includes(siswaItem)) {
+      // If siswa is already selected, remove it
+      setSelectedSiswa(selectedSiswa.filter((item) => item !== siswaItem));
     } else {
-      setSelectedSiswa([...selectedSiswa, index]);
+      // If siswa is not selected, add it
+      setSelectedSiswa([...selectedSiswa, siswaItem]);
     }
   };
 
-  const handleAcceptAll = () => {
+
+  const handleAcceptAll = async () => {
     if (selectedSiswa.length === 0) return;
-
     if (selectedSiswa.length === siswa.length) {
       alert('Semua izin diterima untuk semua siswa!');
     } else {
       alert(`Izin diterima untuk ${selectedSiswa.length} siswa.`);
     }
-
+    for (let i = 0; i < selectedSiswa.length; i++) {
+        console.log(selectedSiswa[i].id)
+        const response = await fetchData('kehadiran/' + selectedSiswa[i].id, {
+          "approved": true,
+        }, 'patch');
+    }
+    
     setSelectedSiswa([]);
+    setRunclick(e => !e)
   };
 
   const defaultTheme = createTheme();
+  React.useEffect(() => {
+
+    getData();
+
+  }, [runclick, selectedDate]);
 
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box sx={{ display: 'flex' }}>
+
         <CssBaseline />
         <AppBar position="absolute" open={open}>
           <Toolbar
@@ -184,12 +248,20 @@ export default function PermintaanIzin() {
               noWrap
               sx={{ flexGrow: 1, fontFamily: 'Poppins' }}
             >
-              Dashboard
+              Permintaan Izin
             </Typography>
+            <LocalizationProvider dateAdapter={AdapterDayjs}> {/* (7) Ditambahkan */}
+              <DatePicker
+                label="Pilih Tanggal"
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
+              />
+            </LocalizationProvider> {/* (8) Ditambahkan */}
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
-          <Box sx={{ backgroundColor: 'rgb(0 0 0 / 50%)', height: '100vh', width: 'auto' }}> 
+          <Box sx={{ backgroundColor: 'rgb(0 0 0 / 50%)', height: '100vh', width: 'auto', overflow: 'hidden' }}>
             <Toolbar
               sx={{
                 display: 'flex',
@@ -200,9 +272,8 @@ export default function PermintaanIzin() {
             >
             </Toolbar>
             <Divider />
-            <List component="nav">
+            <List component="nav" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '95%' }}>
               {mainListItems}
-              <Divider sx={{ my: 1 }} />
             </List>
           </Box>
         </Drawer>
@@ -218,113 +289,150 @@ export default function PermintaanIzin() {
             overflow: 'auto',
           }}
         >
-          <Toolbar />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={selectedSiswa.length === siswa.length}
-                onChange={handleSelectAll}
-              />
-            }
-            label="Pilih Semua"
-          />
-          <Grid container spacing={2}>
-            {siswa.map((data, index) => (
-              <Grid 
-                item 
-                xs={12} 
-                sm={6} 
-                md={4} // Ini menentukan berapa card yang sejajar dalam satu baris
-                lg={3}
-                key={index} 
-                sx={{ marginTop: '20px', paddingLeft: '8px', paddingRight: '8px', display: 'flex', justifyContent: 'center' }}
-              >
-                <Card sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: '10px', padding: '8px', width: '100%', maxWidth: '300px', boxShadow: 1 }}>
-                  <Checkbox
-                    checked={selectedSiswa.includes(index)}
-                    onChange={() => handleSelect(index)}
-                    sx={{ marginRight: '8px' }}
-                  />
-                  <CardContent sx={{ flexGrow: 1, textAlign: 'left', }}>
-                    <Typography variant="h6" sx={{ fontSize: '16px' }}>{data.nama}</Typography>
-                    <Typography variant="body2">{data.kelas}</Typography>
-                    <Typography variant="body2">No. Absen: {data.nomorAbsen}</Typography>
-                  </CardContent>
-                  <Button variant="outlined" onClick={() => handleDialogOpen(data)} sx={{ marginLeft: '8px', fontSize: '12px' }}>
-                    Izin
-                  </Button>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
 
+            <Toolbar />
 
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selectedSiswa.length === siswa.filter((s) => s.approved === true).length}
+                  onChange={handleSelectAll}
+                />
+              }
+              label="Pilih Semua"
+            />
 
-          {/* Popup Dialog */}
-          <Dialog open={openDialog} onClose={handleDialogClose}>
-            <DialogTitle>Detail Izin</DialogTitle>
-            <DialogContent>
-              {currentSiswa && (
-                <Box>
-                  <Typography variant="h6">{currentSiswa.nama}</Typography>
-                  <Typography variant="body2">Kelas: {currentSiswa.kelas}</Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
-                    <TextField
-                      label="Tanggal Awal"
-                      type="date"
-                      fullWidth
-                      value={tanggalAwal}
-                      onChange={(e) => setTanggalAwal(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    <TextField
-                      label="Tanggal Akhir"
-                      type="date"
-                      fullWidth
-                      value={tanggalAkhir}
-                      onChange={(e) => setTanggalAkhir(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Box>
-                  <TextField
-                    label="Deskripsi"
-                    multiline
-                    rows={3}
-                    fullWidth
-                    value={deskripsi}
-                    onChange={(e) => setDeskripsi(e.target.value)}
-                    sx={{ marginTop: '16px' }}
-                  />
-                  <FormControl sx={{ marginTop: '16px' }}>
+            <Grid container spacing={2}>
+
+              {siswa.map((data, index) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  key={index}
+                  sx={{ marginTop: '20px', paddingLeft: '8px', paddingRight: '8px', display: 'flex', justifyContent: 'center' }}
+                >
+                  <Card sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mx: '10px', padding: '8px', width: '100%', maxWidth: '300px', boxShadow: 1 }}>
+                      <Checkbox
+                        checked={selectedSiswa.includes(data)} // Check if the current siswa is selected
+                        onChange={() => handleSelect(data)} // Pass the entire siswa object
+                        sx={{ marginRight: '8px' }}
+                        disabled={data.approved}
+                      />
+                    <CardContent sx={{ flexGrow: 1, textAlign: 'left', }}>
+                      <Typography variant="h6" sx={{ fontSize: '16px' }}>{data.nis || '00000'}</Typography>
+                      <Typography variant="h6" sx={{ fontSize: '16px' }}>{data.nama}</Typography>
+                      <Typography variant="h6" sx={{ fontSize: '16px' }}>{data.status}</Typography>
+                      <Typography variant="body2">{data.kelas + " " + data.jurusan}</Typography>
+                    </CardContent>
+                    <Button variant="outlined" onClick={() => handleDialogOpen(data)} sx={{ marginLeft: '8px', fontSize: '12px' }}>
+                      Izin
+                    </Button>
+                  </Card>
+                </Grid>
+              ))}
+
+            </Grid>
+
+            {/* Popup Dialog */}
+            <Dialog open={openDialog} onClose={handleDialogClose}>
+              <DialogTitle>Detail Izin</DialogTitle>
+              <DialogContent>
+                {currentSiswa && (
+                  <Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                      <TextField
+                        label="Nama"
+                        type="text"
+                        fullWidth
+                        value={currentSiswa.nama} // This should be updated based on the current student's details
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                      <TextField
+                        label="Kelas"
+                        type="text"
+                        fullWidth
+                        value={currentSiswa.kelas} // This should be updated based on the current student's details
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                      <TextField
+                        label="Jurusan"
+                        type="text"
+                        fullWidth
+                        value={currentSiswa.jurusan} // This should be updated based on the current student's details
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+                    {/* Date Input */}
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                      <TextField
+                        label="Tanggal"
+                        type="date"
+                        fullWidth
+                        value={currentSiswa.tanggal} // This should be updated based on the current student's details
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    {/* Description Input */}
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, marginTop: 2 }}>
+                      <TextField
+                        label="Deskripsi"
+                        type="text"
+                        fullWidth
+                        value={currentSiswa.keterangan} // This should be updated based on the current student's details
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    {/* RadioGroup for izin type */}
                     <FormLabel>Jenis Izin</FormLabel>
                     <RadioGroup
                       row
-                      value={izinType}
-                      onChange={(e) => setIzinType(e.target.value)}
+                      value={currentSiswa.status} // This should also be based on the current student's details if applicable
                     >
-                      <FormControlLabel value="izin" control={<Radio />} label="Izin" />
-                      <FormControlLabel value="sakit" control={<Radio />} label="Sakit" />
+                      <FormControlLabel value="Izin" control={<Radio />} label="Izin" />
+                      <FormControlLabel value="Sakit" control={<Radio />} label="Sakit" />
                     </RadioGroup>
                     <FormHelperText>Pilih jenis izin yang sesuai</FormHelperText>
-                  </FormControl>
-                </Box>
+                  </Box>
+                )}
+              </DialogContent>
+              {!currentSiswa.approved && (
+                <DialogActions>
+                  <Button onClick={handleDialogClose}>Batal</Button>
+                  <Button onClick={handleApprove}>Setujui</Button>
+                </DialogActions>
               )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleDialogClose}>Batal</Button>
-              <Button onClick={handleApprove}>Setujui</Button>
-            </DialogActions>
-          </Dialog>
+            </Dialog>
 
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ marginTop: '16px' }}
-            onClick={handleAcceptAll}
-            disabled={selectedSiswa.length === 0}
-          >
-            Accept All
-          </Button>
+
+            {/* Tombol Terima Semua */}
+            <Box sx={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAcceptAll}
+                disabled={selectedSiswa.length === 0}
+              >
+                Terima Semua
+              </Button>
+
+
+            </Box>
+          </Paper>
         </Box>
       </Box>
     </ThemeProvider>

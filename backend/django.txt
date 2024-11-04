@@ -1,0 +1,17 @@
+cd pelanggaran_siswa
+
+python -m venv env
+
+env/Scripts/activate.bat
+
+pip install django django-rest-framework djoser
+
+django-admin startproject project - buat project
+
+cd project
+
+python manage.py runserver - run 
+
+python manage.py startapp pelanggaran - membuat package 
+
+buat model, tambahkan ke admin, register, ubah ke db

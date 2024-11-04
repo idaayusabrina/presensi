@@ -3,16 +3,13 @@ import ListItemButton from '@mui/material/ListItemButton';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import HomeIcon from '@mui/icons-material/Home';
 import { Link } from 'react-router-dom';
-import { IconButton, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import RestoreIcon from '@mui/icons-material/Restore';
-import Box from '@mui/material/Box'
-import Stack from '@mui/material/Stack'
-import Avatar from '@mui/material/Avatar';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import AvatarImage from '../../public/assets/woo seok7.jpg'
+import Sidebar from './Sidebar';
 
 const ListItemsUser = (
-  <React.Fragment >
+  <React.Fragment>
+    <div>
     <Link to="/dashuser">
     <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}> {/*neng kene*/}
         <HomeIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
@@ -26,23 +23,12 @@ const ListItemsUser = (
       <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >History</Typography>
     </ListItemButton>
     </Link>
-    <Box sx={{ display: 'flex', flexDirection: 'column', mt: '63vh'}}>  {/* INI ADALAH BAGIAN YANG MEMBUAT PROFIL BERADA DI BAWAH */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1, marginBottom: '0', display: 'flex', alignItems: 'center '}}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar src={AvatarImage} alt="profil" sx={{ width: 56, height: 56 }} />
-          <Box>
-            <Typography variant="h6">Nama</Typography>
-            <Typography variant="body2" color="textSecondary">
-              EMAIL
-            </Typography>
-          </Box>
-        </Stack>
-        <IconButton sx={{ ml: 5, backgroundColor: 'pink' }}>
-          <LogoutRoundedIcon sx={{ color: 'red', borderRadius: 9 }}/>
-        </IconButton>
-      </Box>
-      </Box>
-      {/* <Link to="/datakelas">
+    </div>
+    <div>
+      <Sidebar/>
+    </div>
+
+    {/* <Link to="/datakelas">
     <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}>
         <AssignmentIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }}/>
       <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Kelas</Typography>
@@ -52,6 +38,19 @@ const ListItemsUser = (
 );
 
 // Profile Section
+// const ProfileSection = ({ profile }) => (
+//   <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+//     <Stack direction="row" spacing={2} alignItems="center">
+//       <Avatar src={profile.avatar} alt={profile.name} sx={{ width: 56, height: 56 }} />
+//       <Box>
+//         <Typography variant="h6">{profile.name}</Typography>
+//         <Typography variant="body2" color="textSecondary">
+//           {profile.description}
+//         </Typography>
+//       </Box>
+//     </Stack>
+//   </Box>
+// );
 
 // Main Component
 // const Sidebar = (props) => {

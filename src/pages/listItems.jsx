@@ -6,58 +6,57 @@ import { Link } from 'react-router-dom';
 import { Typography } from '@mui/material';
 import ClassIcon from '@mui/icons-material/Class';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { Box, Stack, Avatar } from '@mui/material';
-import AvatarImage from '../../public/assets/woo seok7.jpg'
-import IconButton from '@mui/material/IconButton';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import Sidebar from './Sidebar';
 
 const mainListItems = (
   <React.Fragment>
-    <Link to="/dashboard">
-    <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}> {/*neng kene*/}
-        <HomeIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
-       <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Dashboard</Typography>
-    </ListItemButton>
-    </Link>
+    <div>
+      <Link to="/dashboard">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}> {/*neng kene*/}
+          <HomeIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Dashboard</Typography>
+        </ListItemButton>
+      </Link>
 
-    <Link to="/permintaanIzin">
-    <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}> 
-        <AssignmentIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }}/>
-      <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Permintaan Izin</Typography>
-    </ListItemButton>
-    </Link>
+      <Link to="/permintaanIzin">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}>
+          <AssignmentIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Permintaan Izin</Typography>
+        </ListItemButton>
+      </Link>
 
-    <Link to="/datakelas">
-    <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}>
-        <ClassIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }}/>
-      <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Kelas</Typography>
-    </ListItemButton>
-    </Link>
+      <Link to="/datakelas">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}>
+          <ClassIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Kelas</Typography>
+        </ListItemButton>
+      </Link>
 
-    <Link to="/siswa">
-    <ListItemButton sx={{ ':hover' : {bgcolor: '#8B93FF', borderRadius: '10px'} }}> 
-        <GroupsIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
-       <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}} >Siswa</Typography>
-    </ListItemButton>
-    </Link>
+      <Link to="/guru">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}>
+          <GroupsIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Guru</Typography>
+        </ListItemButton>
+      </Link>
 
-    <Box sx={{ display: 'flex', flexDirection: 'column', mt: '52vh', backgroundColor: '#2596be'}}>  {/* INI ADALAH BAGIAN YANG MEMBUAT PROFIL BERADA DI BAWAH */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.100', marginBottom: '0', display: 'flex', alignItems: 'center '}}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Avatar src={AvatarImage} alt="profil" sx={{ width: 56, height: 56 }} />
-          <Box>
-            <Typography variant="h6">Nama</Typography>
-            <Typography variant="body2" color="textSecondary">
-              EMAIL
-            </Typography>
-          </Box>
-        </Stack>
-        <IconButton sx={{ ml: 5, backgroundColor: 'pink' }}>
-          <LogoutRoundedIcon sx={{ color: 'red', borderRadius: 9 }}/>
-        </IconButton>
-      </Box>
-      </Box>
+      <Link to="/siswa">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}>
+          <GroupsIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Siswa</Typography>
+        </ListItemButton>
+      </Link>
 
+      <Link to="/user">
+        <ListItemButton sx={{ ':hover': { bgcolor: '#8B93FF', borderRadius: '10px' } }}>
+          <GroupsIcon sx={{ color: 'white', filter: 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          <Typography sx={{ marginLeft: 1, paddingLeft: 1, fontFamily: 'poppins', color: 'white', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }} >Users</Typography>
+        </ListItemButton>
+      </Link>
+      
+    </div>
+    <div>
+      <Sidebar />
+    </div>
   </React.Fragment>
 );
 

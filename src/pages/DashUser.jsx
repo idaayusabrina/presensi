@@ -14,7 +14,7 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
-import Button from '@mui/material/Button'; 
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -36,26 +36,18 @@ import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import avatarImage from '../../public/assets/woo seok7.jpg';
 
+import { fetchData } from '../api/apiService';
 
-  // Sample user profile data
-  export const userProfile = {
-    avatar: avatarImage,
-    name: 'Admin',
-    email: 'admin@example.com',
-  };
-  console.log("userProfile: ", userProfile)
-  
 
 // Sample data for the table
-const tableData = [
-  { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-01', keterangan: 'Hadir', hadir: 'Hadir', pulang: '15:00' },
-  { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-02', keterangan: 'Alpha', hadir: '-', pulang: 'N/A' },
-  { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-03', keterangan: 'Sakit', hadir: '-', pulang: 'N/A' },
-  { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-06', keterangan: 'Izin', hadir: '-', pulang: 'N/A' },
-  // Add more data as needed
-];
+// const tableData = [
+//   { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-01', keterangan: 'Hadir', hadir: 'Hadir', pulang: '15:00' },
+//   { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-02', keterangan: 'Alpha', hadir: '-', pulang: 'N/A' },
+//   { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-03', keterangan: 'Sakit', hadir: '-', pulang: 'N/A' },
+//   { nama: 'Huda Surya', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-06', keterangan: 'Izin', hadir: '-', pulang: 'N/A' },
+//   // Add more data as needed
+// ];
 
 const Copyright = (props) => (
   <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -119,13 +111,37 @@ const defaultTheme = createTheme();
 export default function DashUser() {
   const [open, setOpen] = React.useState(true);
   const [currentTime, setCurrentTime] = React.useState(new Date());
-  const [selectedDate, setSelectedDate] = React.useState(dayjs()); 
+  const [selectedDate, setSelectedDate] = React.useState(dayjs());
   const [openDialog, setOpenDialog] = React.useState(false);
+  const [tableData, setTableData] = React.useState([]);
+  const [pulang, setPulang] = React.useState(false);
+  const [disabledPresensi, setDisabledPresensi] = React.useState(false);
+  const [runclick, setRunclick] = React.useState(false)
+
+  const getFormattedTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const getFormattedDate = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = now.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
+
   const [formData, setFormData] = React.useState({
-    tanggalAwal: '',
-    tanggalAkhir: '',
-    deskripsi: '',
-    keterangan: 'Izin',
+    siswa: JSON.parse(localStorage.getItem('detail')).id,
+    tanggal: getFormattedDate(),
+    keterangan: '',
+    status: 'Izin',
+
+    nama: JSON.parse(localStorage.getItem('detail')).nama,
+    kelas: JSON.parse(localStorage.getItem('detail')).kelas.nama,
+    jurusan: JSON.parse(localStorage.getItem('detail')).kelas.jurusan,
   });
 
   React.useEffect(() => {
@@ -155,15 +171,113 @@ export default function DashUser() {
     }));
   };
 
-  const handleSubmit = () => {
-    // Handle form submission
+  const handleSubmit = async () => {
     console.log('Form Data:', formData);
+    const response = await fetchData('kehadiran', formData, 'post');
+    console.log(response)
     handleClose();
+    setFormData({
+      siswa: JSON.parse(localStorage.getItem('detail')).id,
+      tanggal: getFormattedDate(),
+      keterangan: '',
+      status: 'Izin',
+
+      nama: JSON.parse(localStorage.getItem('detail')).nama,
+      kelas: JSON.parse(localStorage.getItem('detail')).kelas.nama,
+      jurusan: JSON.parse(localStorage.getItem('detail')).kelas.jurusan,
+    })
+    setRunclick(e => !e)
   };
 
 
+  const checkStatus = () => {
+    const currentTime = getFormattedTime();
+    const cutoffTime = "07:00"; // Set the cutoff time
+
+    // Compare current time with cutoff time
+    let status = currentTime > cutoffTime ? "Telat" : "Masuk";
+
+    console.log(`Current Time: ${currentTime}, Status: ${status}`);
+    return status;
+  };
+
+  const handlePresensi = async () => {
+    if (!pulang) {
+      const response = await fetchData('kehadiran', {
+        "tanggal": getFormattedDate(),
+        "wktdatang": getFormattedTime(),
+        "wktpulang": null,
+        "siswa": localStorage.getItem('id_user'),
+        "status": checkStatus()
+      }, 'post');
+    }
+    else {
+      const response = await fetchData('kehadiran/' + pulang, {
+        "wktpulang": getFormattedTime(),
+      }, 'patch');
+    }
+    setRunclick(e => !e)
+  }
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const getData = async () => {
+      try {
+        const result2 = await fetchData('kehadiran', {
+          siswa: localStorage.getItem('id_user'),
+          tanggal: getFormattedDate(),
+        });
+        for (let i = 0; i < result2.length; i++) {
+          if (result2[i].status == 'Izin' || result2[i].status == 'Sakit') {
+            setDisabledPresensi(true)
+          }
+          else {
+            setDisabledPresensi(false)
+          }
+        }
 
 
+        const result = await fetchData('kehadiran', {
+          siswa: localStorage.getItem('id_user'),
+          tanggal: selectedDate.format('YYYY-MM-DD'),
+        });
+        var pulang = result.find(item => item.wktpulang === null && item.status !== "Sakit" && item.status !== "Izin") || false;
+        var datafix = []
+        for (let i = 0; i < result.length; i++) {
+
+          datafix.push({
+            nama: result[i].siswa.nama,
+            kelas: result[i].siswa.kelas.nama,
+            jurusan: result[i].siswa.kelas.jurusan,
+            tanggal: result[i].tanggal,
+            status: result[i].status,
+            hadir: result[i].wktdatang,
+            pulang: result[i].wktpulang
+          })
+        }
+        setTableData(datafix);
+        setPulang(pulang.id)
+        if (pulang) {
+
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getData();
+    const updateTime = () => {
+      setCurrentTime(new Date());
+    };
+
+    updateTime(); // Update immediately on mount
+    const intervalId = setInterval(updateTime, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Clean up on unmount
+  }, [runclick, selectedDate]);
+  if (loading) return <p>Loading...</p>;
 
 
   return (
@@ -202,19 +316,19 @@ export default function DashUser() {
             >
               Dashboard
             </Typography>
-             {/* (6) Ditambahkan: Komponen DatePicker di bagian kanan header */}
-             <LocalizationProvider dateAdapter={AdapterDayjs}> {/* (7) Ditambahkan */}
+            {/* (6) Ditambahkan: Komponen DatePicker di bagian kanan header */}
+            <LocalizationProvider dateAdapter={AdapterDayjs}> {/* (7) Ditambahkan */}
               <DatePicker
                 label="Pilih Tanggal"
                 value={selectedDate}
                 onChange={(newValue) => setSelectedDate(newValue)}
                 renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
               />
-            </LocalizationProvider> {/* (8) Ditambahkan */} 
+            </LocalizationProvider> {/* (8) Ditambahkan */}
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
-          <Box sx={{ backgroundColor: '#f4f4ff', height: '100vh', width: 'auto' }}> 
+          <Box sx={{ backgroundColor: 'rgb(0 0 0 / 50%)', height: '100vh', width: 'auto', overflow: 'hidden' }}>
             <Toolbar
               sx={{
                 display: 'flex',
@@ -226,7 +340,7 @@ export default function DashUser() {
               {/* logo dashboard */}
             </Toolbar>
             <Divider />
-            <List component="nav">
+            <List component="nav" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '95%' }}>
               {ListItemsUser}
               {/* <Divider sx={{ my: 1 }} /> */}
             </List>
@@ -250,38 +364,38 @@ export default function DashUser() {
               Selamat Datang
             </Typography>
             <Typography sx={{ fontFamily: 'Poppins' }}>
-              Halo, Admin
+              Halo, {localStorage.getItem('name')}
             </Typography>
 
             {/* Displaying the current time */}
             <Typography sx={{
-                fontFamily: 'Poppins, sans-serif', // Set font
-                fontSize: '2.0rem', // Set font size
-              }}
+              fontFamily: 'Poppins, sans-serif', // Set font
+              fontSize: '2.0rem', // Set font size
+            }}
             >
               {currentTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })} WIB
             </Typography>
 
-            <Typography sx={{ fontFamily: 'Poppins', fontSize:'10', mb: 2 }}>
+            <Typography sx={{ fontFamily: 'Poppins', fontSize: '10', mb: 2 }}>
               Konfirmasi Kehadiran
             </Typography>
 
             {/* Buttons */}
             <Box sx={{ mb: 4 }}>
-              <Button variant="contained" color="primary" sx={{ mr: 2 }}>
-                Presensi
+              <Button variant="contained" color="primary" sx={{ mr: 2 }} onClick={handlePresensi} disabled={disabledPresensi}>
+                {!pulang ? 'Presensi' : 'Pulang'}
               </Button>
-              <Button variant="contained" sx={{ 
-                    backgroundColor: 'rgba(255, 0, 0, 0.5)', // Red with 50% opacity
-                    color: '#ffffff', // Set text color to white
-                    '&:hover': {
-                    backgroundColor: 'rgba(255, 0, 0, 0.7)', // Darker red on hover
-                    }
-                }} onClick={handleClickOpen}>
+              <Button variant="contained" sx={{
+                backgroundColor: 'rgba(255, 0, 0, 0.5)', // Red with 50% opacity
+                color: '#ffffff', // Set text color to white
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 0, 0, 0.7)', // Darker red on hover
+                }
+              }} onClick={handleClickOpen} disabled={disabledPresensi}>
                 Izin
               </Button>
             </Box>
-            
+
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
@@ -289,7 +403,7 @@ export default function DashUser() {
                     Rekap Presensi Siswa
                   </Typography>
                   {/* Table for student attendance */}
-                  <TableContainer component={Paper} sx={{ mt: 1, mb: 2}}>
+                  <TableContainer component={Paper} sx={{ mt: 1, mb: 2 }}>
                     <Table>
                       <TableHead>
                         <TableRow>
@@ -297,7 +411,7 @@ export default function DashUser() {
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Kelas</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Jurusan</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Tanggal</TableCell>
-                          <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Keterangan</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Status</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Hadir</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Pulang</TableCell>
                         </TableRow>
@@ -309,7 +423,7 @@ export default function DashUser() {
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.kelas}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.jurusan}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.tanggal}</TableCell>
-                            <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.keterangan}</TableCell>
+                            <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.status}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.hadir}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.pulang}</TableCell>
                           </TableRow>
@@ -322,74 +436,107 @@ export default function DashUser() {
             </Grid>
           </Container>
         </Box>
-        
+
         {/* Dialog for Izin Form */}
         <Dialog open={openDialog} onClose={handleClose}>
           <DialogTitle sx={{ fontFamily: 'Poppins' }}>Detail Izin</DialogTitle>
           <DialogContent>
+            {/* Input untuk nama */}
+            <TextField
+              margin="dense"
+              name="nama"
+              label="Nama"
+              type="text"
+              fullWidth
+              value={formData.nama}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ readOnly: true }}
+              sx={{ fontFamily: 'Poppins' }}
+            />
+            {/* Input untuk nama */}
+            <TextField
+              margin="dense"
+              name="kelas"
+              label="Kelas"
+              type="text"
+              fullWidth
+              value={formData.kelas}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ readOnly: true }}
+              sx={{ fontFamily: 'Poppins' }}
+            />
+
+            <TextField
+              margin="dense"
+              name="jurusan"
+              label="Jurusan"
+              type="text"
+              fullWidth
+              value={formData.jurusan}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{ readOnly: true }}
+              sx={{ fontFamily: 'Poppins' }}
+            />
+
+            {/* Input untuk nama */}
+
+
             {/* Input untuk Tanggal Awal Izin */}
             <TextField
               autoFocus
               margin="dense"
-              name="tanggalAwal"
-              label="Tanggal Awal Izin"
+              name="tanggal"
+              label="Tanggal Izin"
               type="date"
               fullWidth
-              value={formData.tanggalAwal}
+              value={formData.tanggal}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
               sx={{ fontFamily: 'Poppins' }}
             />
-            {/* Input untuk Tanggal Akhir Izin */}
+
+            {/* Input untuk keterangan */}
             <TextField
               margin="dense"
-              name="tanggalAkhir"
-              label="Tanggal Akhir Izin"
-              type="date"
-              fullWidth
-              value={formData.tanggalAkhir}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              sx={{ fontFamily: 'Poppins' }}
-            />
-            {/* Input untuk Deskripsi */}
-            <TextField
-              margin="dense"
-              name="deskripsi"
-              label="Deskripsi"
+              name="keterangan"
+              label="Keterangan"
               type="text"
               fullWidth
               multiline
               rows={4}
-              value={formData.deskripsi}
+              value={formData.keterangan}
               onChange={handleChange}
               sx={{ fontFamily: 'Poppins' }}
             />
             {/* Pilihan Radio untuk Keterangan */}
             <FormControl component="fieldset" sx={{ mt: 2 }}>
-              <FormLabel component="legend" sx={{ fontFamily: 'Poppins' }}>Keterangan</FormLabel>
+              <FormLabel component="legend" sx={{ fontFamily: 'Poppins' }}>Status</FormLabel>
               <RadioGroup
-                name="keterangan"
-                value={formData.keterangan}
+                name="status"
+                value={formData.status}
                 onChange={handleChange}
+                defaultValue='Izin'
               >
-                <FormControlLabel 
-                  value="Izin" 
-                  control={<Radio />} 
-                  label="Izin" 
+                <FormControlLabel
+                  value="Izin"
+                  control={<Radio />}
+                  label="Izin"
                   sx={{ fontFamily: 'Poppins, sans-serif' }}
                 />
-                <FormControlLabel 
-                  value="Sakit" 
-                  control={<Radio />} 
-                  label="Sakit" 
+                <FormControlLabel
+                  value="Sakit"
+                  control={<Radio />}
+                  label="Sakit"
                   sx={{ fontFamily: 'Poppins, sans-serif' }}
                 />
               </RadioGroup>
             </FormControl>
 
             {/* Input untuk Unggah Foto */}
-            <Button
+            {/* <Button
               variant="contained"
               component="label"
               sx={{ mt: 2, fontFamily: 'Poppins', backgroundColor: '#6200ea', color: '#fff' }}
@@ -409,7 +556,7 @@ export default function DashUser() {
                   }
                 }}
               />
-            </Button>
+            </Button> */}
             {formData.buktiFoto && (
               <Typography sx={{ fontFamily: 'Poppins', mt: 1 }}>
                 File Terpilih: {formData.buktiFoto.name}
@@ -421,7 +568,7 @@ export default function DashUser() {
             <Button onClick={handleClose} sx={{ fontFamily: 'Poppins' }}>Cancel</Button>
             <Button onClick={handleSubmit} sx={{ fontFamily: 'Poppins' }}>Submit</Button>
           </DialogActions>
-      </Dialog>
+        </Dialog>
       </Box>
     </ThemeProvider>
   );

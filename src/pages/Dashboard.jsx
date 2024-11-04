@@ -15,9 +15,10 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Link from '@mui/material/Link';
 import MenuIcon from '@mui/icons-material/Menu';
-import Button from '@mui/material/Button'; 
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField'; // Import TextField
 import jsPDF from 'jspdf'; // Import jsPDF
+import 'jspdf-autotable'; // Ditambahkan
 import mainListItems from './listItems';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -42,10 +43,10 @@ import { data } from 'autoprefixer';
 
 // Sample data for the table
 // const tableData = [
-//   { nama: 'Farra Azzura', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', keterangan: 'Hadir', hadir: 'Hadir', pulang: '15:00' },
-//   { nama: 'Sierra Valenci', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', keterangan: 'Alpha', hadir: '-', pulang: 'N/A' },
-//   { nama: 'Rossa Nur Aini', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', keterangan: 'Sakit', hadir: '-', pulang: 'N/A' },
-//   { nama: 'Ayu Sabrina', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', keterangan: 'Izin', hadir: '-', pulang: 'N/A' },
+//   { nama: 'Farra Azzura', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', status: 'Hadir', hadir: 'Hadir', pulang: '15:00' },
+//   { nama: 'Sierra Valenci', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', status: 'sakit', hadir: '-', pulang: 'N/A' },
+//   { nama: 'Rossa Nur Aini', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', status: 'Sakit', hadir: '-', pulang: 'N/A' },
+//   { nama: 'Ayu Sabrina', kelas: '12', jurusan: 'PPLG', tanggal: '2024-08-05', status: 'Izin', hadir: '-', pulang: 'N/A' },
 //   // Add more data as needed
 // ];
 
@@ -112,35 +113,103 @@ export default function Dashboard() {
   const [open, setOpen] = React.useState(true);
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [selectedDate, setSelectedDate] = React.useState(dayjs()); 
-  const [tableData, setTableData] = React.useState([]); 
+  const [selectedDate, setSelectedDate] = React.useState(dayjs());
+  const [tableData, setTableData] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
+  const [runclick, setRunclick] = React.useState(false)
 
- 
+  const [count, setCount] = React.useState({
+    'presensi': 0,
+    'sakit': 0,
+    'hadir': 0,
+    'telat': 0,
+  });
+
+  const filteredData = tableData.filter((row) =>
+    row.nama.toLowerCase().includes(searchTerm.toLowerCase())
+
+  );
+
+  const getData = async () => {
+    try {
+      const result = await fetchData('kehadiran', 
+        {
+          tanggal: selectedDate.format('YYYY-MM-DD'),
+        }
+      );
+      var datafix = []
+      for (let i = 0; i < result.length; i++) {
+        datafix.push({
+          nama: result[i].siswa.nama,
+          kelas: result[i].siswa.kelas.nama,
+          jurusan: result[i].siswa.kelas.jurusan,
+          tanggal: result[i].tanggal,
+          status: result[i].status,
+          hadir: result[i].wktdatang,
+          pulang: result[i].wktpulang
+        })
+      }
+      await setTableData(datafix);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  const updateCount = () => {
+    const newCount = {
+      presensi: 0,
+      sakit: 0,
+      hadir: 0,
+      telat: 0,
+    };
+    if (filteredData.length) {
+      console.log('filteredData', filteredData)
+      filteredData.forEach((row) => {
+        // Assuming 'row.status' is where the status values are stored
+        newCount.presensi++;
+        if (row.status === 'Masuk') {
+          newCount.hadir++;
+        } else if (row.status === 'Sakit') {
+          newCount.sakit++;
+        } else if (row.status === 'Telat') {
+          newCount.telat++;
+        }
+        // Add additional conditions if needed
+      });
+    }else{
+      console.log('tableData', tableData)
+      tableData.forEach((row) => {
+        // Assuming 'row.status' is where the status values are stored
+        newCount.presensi++;
+        if (row.status === 'Masuk') {
+          newCount.hadir++;
+        } else if (row.status === 'Sakit') {
+          newCount.sakit++;
+        } else if (row.status === 'Telat') {
+          newCount.telat++;
+        }
+        // Add additional conditions if needed
+      });
+    }
+
+    setCount(newCount);
+  };
+  React.useEffect(() => {
+
+    updateCount()
+
+  }, [tableData]);
 
   React.useEffect(() => {
-    const getData = async () => {
-      try {
-        const result = await fetchData('data_all');
-        var datafix = []
-        for (let i = 0; i < result.length; i++) {
-          datafix.push({
-            nama: result[i].nama, 
-            kelas: result[i].kelas, 
-            jurusan: result[i].jurusan, 
-            tanggal: result[i].tanggal, 
-            keterangan: result[i].keterangan, 
-            hadir: result[i].wktdatang, 
-            pulang: result[i].wktpulang
-          })
-        }
-        setTableData(datafix);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+
+    getData();
+
+  }, [selectedDate]);
+
+  React.useEffect(() => {
 
     getData();
     const updateTime = () => {
@@ -151,27 +220,69 @@ export default function Dashboard() {
     const intervalId = setInterval(updateTime, 1000); // Update every second
 
     return () => clearInterval(intervalId); // Clean up on unmount
+
+
   }, []);
   if (loading) return <p>Loading...</p>;
 
   // (4) Ditambahkan: Filter tableData berdasarkan searchTerm
-  const filteredData = tableData.filter((row) =>
-    row.nama.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
 
   // (5) Ditambahkan: Fungsi untuk ekspor PDF
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text('Rekap Presensi Siswa', 10, 10);
-    let y = 20;
+    const doc = new jsPDF('portrait', 'pt', 'A4');
 
-    filteredData.forEach((row, index) => {
-      doc.text(`${index + 1}. ${row.nama} - ${row.kelas} - ${row.jurusan} - ${row.tanggal} - ${row.keterangan}`, 10, y);
-      y += 10;
+    // Tambahkan Judul Utama
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Laporan Rekap Presensi Siswa', 40, 40);
+
+    // Tambahkan informasi tambahan
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 40, 60);
+    doc.text(`Jumlah Siswa: ${filteredData.length}`, 40, 80);
+
+    // Tambahkan garis pembatas
+    doc.line(40, 90, 550, 90);
+
+    // Mengatur kolom tabel
+    const tableColumn = ['Nama', 'Kelas', 'Jurusan', 'Tanggal', 'Status', 'Hadir', 'Pulang'];
+    const tableRows = [];
+
+    filteredData.forEach((row) => {
+      const rowData = [
+        row.nama,
+        row.kelas,
+        row.jurusan,
+        row.tanggal,
+        row.status,
+        row.hadir,
+        row.pulang,
+      ];
+      tableRows.push(rowData);
     });
 
-    doc.save('rekap_presensi.pdf');
+    // Menambahkan tabel ke dalam PDF
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 100,
+      theme: 'grid', // Tambahkan tema grid agar tabel lebih rapi
+      headStyles: { fillColor: [22, 160, 133] }, // Mengubah warna header
+      margin: { top: 10 },
+      styles: { font: 'helvetica', fontSize: 10, cellPadding: 6 },
+    });
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Dokumen ini dihasilkan pada ${new Date().toLocaleDateString('id-ID')}`, 40, doc.internal.pageSize.height - 30);
+
+    // Simpan PDF
+    doc.save('rekap_presensi_siswa.pdf');
   };
+
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -218,26 +329,26 @@ export default function Dashboard() {
                 onChange={(newValue) => setSelectedDate(newValue)}
                 renderInput={(params) => <TextField {...params} size="small" sx={{ width: 150 }} />}
               />
-            </LocalizationProvider> {/* (8) Ditambahkan */}   
+            </LocalizationProvider> {/* (8) Ditambahkan */}
 
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
-          <Box sx={{ backgroundColor: 'rgb(0 0 0 / 50%)', height: '100vh', width: 'auto' }}> 
+          <Box sx={{ backgroundColor: 'rgb(0 0 0 / 50%)', height: '100vh', width: 'auto', overflow: 'hidden' }}>
             <Toolbar
               sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
                 px: [1],
+                height: '5%'
               }}
             >
               {/* logo dashboard */}
             </Toolbar>
             <Divider />
-            <List component="nav" sx={{ zIndex: 1000 }}>
+            <List component="nav" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '95%' }}>
               {mainListItems}
-              {/* <Divider sx={{ my: 1 }} /> */}
             </List>
           </Box>
         </Drawer>
@@ -259,14 +370,14 @@ export default function Dashboard() {
               Selamat Datang
             </Typography>
             <Typography sx={{ fontFamily: 'Poppins' }}>
-              Halo, Admin
+              Halo, {localStorage.getItem('name')}
             </Typography>
 
             {/* dibawah ini nambahin jam */}
             <Typography sx={{
-                fontFamily: 'Poppins, sans-serif', // Menetapkan font
-                fontSize: '2.0rem', // Menetapkan ukuran font
-              }}
+              fontFamily: 'Poppins, sans-serif', // Menetapkan font
+              fontSize: '2.0rem', // Menetapkan ukuran font
+            }}
             >
               {currentTime.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' })} WIB
             </Typography>
@@ -278,15 +389,12 @@ export default function Dashboard() {
                 <Card sx={{ width: 'auto', height: 'auto', padding: 0, backgroundColor: 'rgba(139, 147, 255, 0.6)' }}>
                   <CardContent sx={{ padding: '8px 16px' }}>
                     <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
-                      19 Kali
+                      {count.presensi} Kali
                     </Typography>
                     <Typography variant="h6" component="div">
                       Presensi
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ padding: 0 }}>
-                    <Button size="small">Detail</Button>
-                  </CardActions>
                 </Card>
               </Grid>
 
@@ -295,15 +403,12 @@ export default function Dashboard() {
                 <Card sx={{ width: 'auto', height: 'auto', padding: 0, backgroundColor: 'rgba(244, 196, 196, 0.6)' }}>
                   <CardContent sx={{ padding: '8px 16px' }}>
                     <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
-                      19 Kali
+                      {count.sakit} Kali
                     </Typography>
                     <Typography variant="h6" component="div">
-                      Alpha
+                      Sakit
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ padding: 0 }}>
-                    <Button size="small">Detail</Button>
-                  </CardActions>
                 </Card>
               </Grid>
 
@@ -312,15 +417,12 @@ export default function Dashboard() {
                 <Card sx={{ width: 'auto', height: 'auto', padding: 0, backgroundColor: 'rgba(180, 227, 128, 0.6)' }}>
                   <CardContent sx={{ padding: '8px 16px' }}>
                     <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
-                      19 Kali
+                      {count.hadir} Kali
                     </Typography>
                     <Typography variant="h6" component="div">
                       Hadir
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ padding: 0 }}>
-                    <Button size="small">Detail</Button>
-                  </CardActions>
                 </Card>
               </Grid>
 
@@ -329,15 +431,12 @@ export default function Dashboard() {
                 <Card sx={{ width: 'auto', height: 'auto', padding: 0, backgroundColor: 'rgba(246, 251, 122, 0.6)' }}>
                   <CardContent sx={{ padding: '8px 16px' }}>
                     <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
-                      19 Kali
+                      {count.telat} Kali
                     </Typography>
                     <Typography variant="h6" component="div">
                       Telat
                     </Typography>
                   </CardContent>
-                  <CardActions sx={{ padding: 0 }}>
-                    <Button size="small">Detail</Button>
-                  </CardActions>
                 </Card>
               </Grid>
             </Grid>
@@ -351,7 +450,11 @@ export default function Dashboard() {
                   fullWidth
                   size="small"
                   margin="normal"
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value); // Update search term
+                    console.log('e.target.value', e.target.value)
+                    updateCount(); // Call updateCount after updating searchTerm
+                  }}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -367,7 +470,7 @@ export default function Dashboard() {
                   <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Poppins, sans-serif' }}>
                     Rekap Presensi Siswa
                   </Typography>
-                  
+
                   {/* ini tabel siswa */}
                   <TableContainer component={Paper} sx={{ mt: 1, mb: 2 }}>
                     <Table>
@@ -377,6 +480,7 @@ export default function Dashboard() {
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Kelas</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Jurusan</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Tanggal</TableCell>
+                          <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Status</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Hadir</TableCell>
                           <TableCell sx={{ fontFamily: 'Poppins, sans-serif', backgroundColor: 'rgba(139, 147, 255, 0.5)' }}>Pulang</TableCell>
                         </TableRow>
@@ -388,6 +492,7 @@ export default function Dashboard() {
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.kelas}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.jurusan}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.tanggal}</TableCell>
+                            <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.status}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.hadir}</TableCell>
                             <TableCell sx={{ fontFamily: 'Poppins, sans-serif' }}>{row.pulang}</TableCell>
                           </TableRow>
